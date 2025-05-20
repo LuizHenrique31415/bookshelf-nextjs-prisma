@@ -1,0 +1,73 @@
+// Schema do Prisma para o site de livros
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Definição dos modelos (tabelas)
+model Book {
+  id          String   @id @default(uuid())
+  title       String
+  description String?  @db.Text
+  imageUrl    String?
+  isbn        String?  @unique
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relacionamentos
+  authors     BookAuthor[]
+  categories  BookCategory[]
+}
+
+model Author {
+  id        String   @id @default(uuid())
+  name      String
+  biography String?  @db.Text
+  
+  // Relacionamentos
+  books     BookAuthor[]
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  
+  // Relacionamentos
+  books BookCategory[]
+}
+
+// Tabelas de junção para relacionamentos N:N
+model BookAuthor {
+  book      Book     @relation(fields: [bookId], references: [id])
+  bookId    String
+  author    Author   @relation(fields: [authorId], references: [id])
+  authorId  String
+
+  @@id([bookId, authorId])
+}
+
+model BookCategory {
+  book       Book     @relation(fields: [bookId], references: [id])
+  bookId     String
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+
+  @@id([bookId, categoryId])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user") // "user" ou "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Relacionamentos futuros: favoritos, histórico, etc.
+}
